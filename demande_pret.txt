@@ -1,0 +1,9 @@
+Nom du Client: John Doe
+Adresse: 123 Rue de la Liberté, 75001 Paris, France
+Email: john.doe@email.com
+Numéro de Téléphone: +33 123 456 789
+Montant du Prêt Demandé: 200000 EUR
+Durée du Prêt: 20 ans
+Description de la Propriété: Maison à deux étages avec jardin, située dans un quartier résidentiel calme.
+Revenu Mensuel: 5000 EUR
+Dépenses Mensuelles: 3000 EUR

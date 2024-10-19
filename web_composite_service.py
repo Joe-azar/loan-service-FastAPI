@@ -1,55 +1,49 @@
-from spyne import Application, rpc, ServiceBase, Unicode
-from spyne.protocol.soap import Soap11
-from spyne.server.wsgi import WsgiApplication
-from suds.client import Client
+from fastapi import FastAPI, HTTPException
+import httpx
 
-class LoanEvaluationService(ServiceBase):
-    
-    @rpc(Unicode, _returns=Unicode)
-    def evaluate_loan(ctx, loan_request):
-        try:
-            # Appel du service d'extraction d'informations
-            extraction_service_url = "http://localhost:8001/InformationExtractionService?wsdl"
-            extraction_client = Client(extraction_service_url)
-            extracted_info = eval(extraction_client.service.extract_loan_information(loan_request).value)
-            
-            # Appel du service de vérification de solvabilité
-            solvency_service_url = "http://localhost:8002/SolvencyCheckService?wsdl"
-            solvency_client = Client(solvency_service_url)
-            solvency_score = solvency_client.service.check_solvency(
-                extracted_info['Nom'], extracted_info['Revenu Mensuel'], extracted_info['Dépenses Mensuelles']
-            )
-            
-            # Appel du service d'évaluation de la propriété
-            property_service_url = "http://localhost:8003/PropertyEvaluationService?wsdl"
-            property_client = Client(property_service_url)
-            property_value = property_client.service.evaluate_property(
-                extracted_info['Description de la Propriété'], extracted_info['Adresse']
-            )
-            
-            # Appel du service de décision d'approbation
-            approval_service_url = "http://localhost:8004/ApprovalDecisionService?wsdl"
-            approval_client = Client(approval_service_url)
-            decision = approval_client.service.make_decision(
-                solvency_score, property_value, extracted_info['Montant du Prêt'], 
-                "Stable",  
-                "Good"    
-            )
-            
-            return f"Decision: {decision}, Solvency Score: {solvency_score}, Property Value: {property_value}"
+app = FastAPI()
 
-        except Exception as e:
-            return f"An error occurred during loan evaluation: {e}"
+# Orchestration service for evaluating loan requests
+@app.post("/evaluate_loan/")
+async def evaluate_loan(loan_request: dict):
+    try:
+        # 1. Call the Information Extraction service
+        extraction_response = await httpx.post("http://localhost:8001/extract_loan_information/", json=loan_request)
+        extracted_info = extraction_response.json().get("extracted_info")
+        
+        # 2. Call the Solvency Check service
+        solvency_data = {
+            "nom": extracted_info["nom"],
+            "revenu_mensuel": extracted_info["revenu_mensuel"],
+            "depenses_mensuelles": extracted_info["depenses_mensuelles"]
+        }
+        solvency_response = await httpx.post("http://localhost:8002/check_solvency/", json=solvency_data)
+        solvency_score = solvency_response.json()["solvency_score"]
+        
+        # 3. Call the Property Evaluation service
+        property_data = {
+            "description_propriete": extracted_info["description_propriete"],
+            "adresse": extracted_info["adresse"]
+        }
+        property_response = await httpx.post("http://localhost:8003/evaluate_property/", json=property_data)
+        property_value = property_response.json()["property_value"]
 
-# Créer l'application Spyne
-application = Application([LoanEvaluationService],
-                          tns='composite.loan_service',
-                          in_protocol=Soap11(validator='lxml'),
-                          out_protocol=Soap11())
+        # 4. Call the Approval Decision service
+        approval_data = {
+            "solvency_score": solvency_score,
+            "property_value": property_value,
+            "loan_amount": extracted_info["montant"],
+            "employment_status": "Stable",  # Hardcoded for now
+            "credit_history": "Good"  # Hardcoded for now
+        }
+        approval_response = await httpx.post("http://localhost:8004/make_decision/", json=approval_data)
+        decision = approval_response.json()["decision"]
+        
+        return {
+            "decision": decision,
+            "solvency_score": solvency_score,
+            "property_value": property_value
+        }
 
-if __name__ == '__main__':
-    wsgi_application = WsgiApplication(application)
-    from wsgiref.simple_server import make_server
-    server = make_server('0.0.0.0', 8000, wsgi_application)
-    print("Composite Loan Evaluation Service started on http://localhost:8000")
-    server.serve_forever()
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
