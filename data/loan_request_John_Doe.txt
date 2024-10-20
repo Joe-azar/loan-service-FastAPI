@@ -1,1 +1,0 @@
-{'nom': 'John Doe', 'adresse': '123 Rue de la Liberté, 75001 Paris, France', 'email': 'john.doe@email.com', 'telephone': '+33 123 456 789', 'montant': '200000', 'duree': '20', 'description_propriete': 'Maison à deux étages avec jardin, située dans un quartier résidentiel calme', 'revenu_mensuel': '5000', 'depenses_mensuelles': '3000'}

@@ -1,7 +1,11 @@
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
+import requests
+import logging
 
 app = FastAPI()
+
+logging.basicConfig(filename="property_service.log", level=logging.INFO, format='%(asctime)s - %(message)s')
 
 class PropertyEvaluation(BaseModel):
     description_propriete: str
@@ -9,7 +13,6 @@ class PropertyEvaluation(BaseModel):
 
 @app.post("/evaluate_property/")
 async def evaluate_property(property_eval: PropertyEvaluation):
-    # Évaluer la propriété en fonction de la description et de l'adresse
     market_value = get_market_value(property_eval.adresse)
     property_condition = assess_property_condition(property_eval.description_propriete)
     legal_compliance = check_legal_compliance(property_eval.description_propriete)
@@ -18,6 +21,8 @@ async def evaluate_property(property_eval: PropertyEvaluation):
         property_value = market_value * 0.5
     else:
         property_value = market_value + property_condition
+
+    logging.info(f"Evaluated Property Value: {property_value} for {property_eval.adresse}")
 
     return {"property_value": property_value}
 

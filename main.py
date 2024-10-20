@@ -6,6 +6,10 @@ from tkinter import messagebox, filedialog
 import shutil
 import signal
 import sys
+import logging
+
+# Initialiser les logs
+logging.basicConfig(filename="service_logs.log", level=logging.INFO, format='%(asctime)s - %(message)s')
 
 # Liste des services à lancer
 services = [
@@ -21,14 +25,13 @@ processes = []
 
 def launch_service(service):
     try:
-        # Lancer le service en arrière-plan
+        # Vérifier si le service est déjà lancé
         process = subprocess.Popen(service["script"], shell=True)
         processes.append(process)
-        print(f"{service['name']} lancé avec succès.")
+        logging.info(f"{service['name']} lancé avec succès.")
     except Exception as e:
-        print(f"Erreur lors du lancement de {service['name']}: {str(e)}")
+        logging.error(f"Erreur lors du lancement de {service['name']}: {str(e)}")
 
-# Fonction pour arrêter proprement tous les services
 def stop_services():
     print("\nArrêt des services...")
     for process in processes:
@@ -41,11 +44,9 @@ def stop_services():
     print("Tous les services sont arrêtés.")
     sys.exit(0)
 
-# Capture du signal Ctrl+C
 def signal_handler(sig, frame):
     stop_services()
 
-# Fonction pour soumettre une demande de prêt via l'interface graphique
 def submit_request():
     nom = entry_nom.get()
     adresse = entry_adresse.get()
@@ -81,9 +82,9 @@ def submit_request():
     with open(request_filename, "w", encoding="utf-8") as f:
         f.write(str(loan_request))
 
+    logging.info("Demande de prêt soumise avec succès.")
     messagebox.showinfo("Succès", "Votre demande de prêt a été soumise avec succès.")
 
-# Fonction pour déposer un fichier existant
 def submit_file():
     file_path = filedialog.askopenfilename(title="Sélectionnez un fichier de demande",
                                            filetypes=(("Fichiers texte", "*.txt"), ("Tous les fichiers", "*.*")))
@@ -95,8 +96,10 @@ def submit_file():
 
         try:
             shutil.copy(file_path, data_directory)
+            logging.info(f"Fichier {file_path} déposé avec succès.")
             messagebox.showinfo("Succès", "Le fichier a été déposé avec succès.")
         except Exception as e:
+            logging.error(f"Erreur lors de la copie du fichier: {str(e)}")
             messagebox.showerror("Erreur", f"Impossible de copier le fichier: {str(e)}")
 
 if __name__ == "__main__":
