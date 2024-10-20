@@ -7,7 +7,7 @@ import shutil
 import signal
 import sys
 import logging
-import requests  # Ajout de requests pour faire l'appel HTTP à l'API
+import requests  # Utilisé pour faire l'appel HTTP à l'API
 
 # Initialiser les logs
 logging.basicConfig(filename="service_logs.log", level=logging.INFO, format='%(asctime)s - %(message)s')
@@ -107,12 +107,27 @@ def submit_file():
             os.makedirs(data_directory)
 
         try:
+            with open(file_path, "r", encoding="utf-8") as f:
+                loan_request = f.read()
+            
+            # Convertir le contenu du fichier en dictionnaire
+            loan_request_dict = eval(loan_request)  # ATTENTION: Utilise une méthode plus sûre si possible
+
+            # Appel à l'API pour évaluer la demande de prêt
+            response = requests.post("http://localhost:8000/evaluate_loan/", json=loan_request_dict)
+            response.raise_for_status()
+            decision_data = response.json()
+            decision = decision_data.get("decision", "Aucune décision reçue")
+
+            # Afficher la décision dans une boîte de dialogue
+            messagebox.showinfo("Décision de Prêt", f"La décision pour le prêt  est : {decision}")
+
+            # Copie du fichier dans le répertoire "data"
             shutil.copy(file_path, data_directory)
             logging.info(f"Fichier {file_path} déposé avec succès.")
-            messagebox.showinfo("Succès", "Le fichier a été déposé avec succès.")
         except Exception as e:
-            logging.error(f"Erreur lors de la copie du fichier: {str(e)}")
-            messagebox.showerror("Erreur", f"Impossible de copier le fichier: {str(e)}")
+            logging.error(f"Erreur lors de la copie du fichier ou de l'évaluation : {str(e)}")
+            messagebox.showerror("Erreur", f"Impossible de copier ou d'évaluer le fichier : {str(e)}")
 
 if __name__ == "__main__":
     signal.signal(signal.SIGINT, signal_handler)
