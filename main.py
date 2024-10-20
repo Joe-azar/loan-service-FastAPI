@@ -62,25 +62,28 @@ def submit_request():
         messagebox.showwarning("Erreur", "Tous les champs doivent être remplis.")
         return
 
-    loan_request = {
-        "nom": nom,
-        "adresse": adresse,
-        "email": email,
-        "telephone": telephone,
-        "montant": montant,
-        "duree": duree,
-        "description_propriete": description,
-        "revenu_mensuel": revenu,
-        "depenses_mensuelles": depenses
-    }
+    # Formatage du contenu du fichier avec les informations fournies
+    loan_request = (
+        f"Nom du Client: {nom}\n"
+        f"Adresse: {adresse}\n"
+        f"Email: {email}\n"
+        f"Numéro de Téléphone: {telephone}\n"
+        f"Montant du Prêt Demandé: {montant} EUR\n"
+        f"Durée du Prêt: {duree} ans\n"
+        f"Description de la Propriété: {description}\n"
+        f"Revenu Mensuel: {revenu} EUR\n"
+        f"Dépenses Mensuelles: {depenses} EUR\n"
+    )
 
     data_directory = "data"
     if not os.path.exists(data_directory):
         os.makedirs(data_directory)
 
     request_filename = os.path.join(data_directory, f"loan_request_{nom.replace(' ', '_')}.txt")
+    
+    # Écriture du contenu formaté dans le fichier
     with open(request_filename, "w", encoding="utf-8") as f:
-        f.write(str(loan_request))
+        f.write(loan_request)
 
     logging.info("Demande de prêt soumise avec succès.")
     messagebox.showinfo("Succès", "Votre demande de prêt a été soumise avec succès.")
