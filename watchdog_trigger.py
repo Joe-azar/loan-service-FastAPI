@@ -9,16 +9,16 @@ logging.basicConfig(filename="watchdog.log", level=logging.INFO, format='%(ascti
 
 async def send_loan_to_composite_service(loan_request):
     composite_service_url = "http://localhost:8000/evaluate_loan/"
-    
     try:
         async with httpx.AsyncClient() as client:
             response = await client.post(composite_service_url, json=loan_request)
+        response.raise_for_status()  # Assure-toi que l'erreur est levée si le statut n'est pas 2xx
         decision = response.json()
         logging.info(f"Loan Evaluation Result: {decision}")
         return decision
-    except Exception as e:
+    except httpx.RequestError as e:
         logging.error(f"Failed to send loan request to composite service: {e}")
-        return None
+
 
 def extract_loan_information(file_content):
     loan_request = {}

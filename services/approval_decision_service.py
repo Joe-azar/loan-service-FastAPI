@@ -1,11 +1,22 @@
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 from database import db
+from bson import ObjectId
 import logging
 
 app = FastAPI()
 
 logging.basicConfig(filename="approval_service.log", level=logging.INFO, format='%(asctime)s - %(message)s')
+
+# Fonction pour convertir les ObjectId en chaînes de caractères
+def convert_object_id(data):
+    if isinstance(data, ObjectId):
+        return str(data)
+    if isinstance(data, dict):
+        return {key: convert_object_id(value) for key, value in data.items()}
+    if isinstance(data, list):
+        return [convert_object_id(item) for item in data]
+    return data
 
 class LoanApprovalRequest(BaseModel):
     solvency_score: float
