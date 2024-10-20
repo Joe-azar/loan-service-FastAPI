@@ -7,6 +7,7 @@ import shutil
 import signal
 import sys
 import logging
+import requests  # Ajout de requests pour faire l'appel HTTP à l'API
 
 # Initialiser les logs
 logging.basicConfig(filename="service_logs.log", level=logging.INFO, format='%(asctime)s - %(message)s')
@@ -25,7 +26,6 @@ processes = []
 
 def launch_service(service):
     try:
-        # Vérifier si le service est déjà lancé
         process = subprocess.Popen(service["script"], shell=True)
         processes.append(process)
         logging.info(f"{service['name']} lancé avec succès.")
@@ -62,18 +62,17 @@ def submit_request():
         messagebox.showwarning("Erreur", "Tous les champs doivent être remplis.")
         return
 
-    # Formatage du contenu du fichier avec les informations fournies
-    loan_request = (
-        f"Nom du Client: {nom}\n"
-        f"Adresse: {adresse}\n"
-        f"Email: {email}\n"
-        f"Numéro de Téléphone: {telephone}\n"
-        f"Montant du Prêt Demandé: {montant} EUR\n"
-        f"Durée du Prêt: {duree} ans\n"
-        f"Description de la Propriété: {description}\n"
-        f"Revenu Mensuel: {revenu} EUR\n"
-        f"Dépenses Mensuelles: {depenses} EUR\n"
-    )
+    loan_request = {
+        "nom": nom,
+        "adresse": adresse,
+        "email": email,
+        "telephone": telephone,
+        "montant": montant,
+        "duree": duree,
+        "description_propriete": description,
+        "revenu_mensuel": revenu,
+        "depenses_mensuelles": depenses
+    }
 
     data_directory = "data"
     if not os.path.exists(data_directory):
@@ -81,12 +80,22 @@ def submit_request():
 
     request_filename = os.path.join(data_directory, f"loan_request_{nom.replace(' ', '_')}.txt")
     
-    # Écriture du contenu formaté dans le fichier
     with open(request_filename, "w", encoding="utf-8") as f:
-        f.write(loan_request)
+        f.write(str(loan_request))
+
+    # Appel à l'API pour évaluer la demande de prêt
+    try:
+        response = requests.post("http://localhost:8000/evaluate_loan/", json=loan_request)
+        response.raise_for_status()
+        decision_data = response.json()
+        decision = decision_data.get("decision", "Aucune décision reçue")
+
+        # Afficher la décision dans une boîte de dialogue
+        messagebox.showinfo("Décision de Prêt", f"La décision pour le prêt de {nom} est : {decision}")
+    except requests.exceptions.RequestException as e:
+        messagebox.showerror("Erreur", f"Erreur lors de la soumission de la demande : {e}")
 
     logging.info("Demande de prêt soumise avec succès.")
-    messagebox.showinfo("Succès", "Votre demande de prêt a été soumise avec succès.")
 
 def submit_file():
     file_path = filedialog.askopenfilename(title="Sélectionnez un fichier de demande",
