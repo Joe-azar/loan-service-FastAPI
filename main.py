@@ -111,7 +111,10 @@ def submit_file():
                 loan_request = f.read()
             
             # Convertir le contenu du fichier en dictionnaire
-            loan_request_dict = eval(loan_request)  # ATTENTION: Utilise une méthode plus sûre si possible
+            loan_request_dict = eval(loan_request)  # ATTENTION: Utiliser une méthode plus sûre si possible
+
+            # Extraire le nom du client à partir des données du fichier
+            nom = loan_request_dict.get("nom", "le client")
 
             # Appel à l'API pour évaluer la demande de prêt
             response = requests.post("http://localhost:8000/evaluate_loan/", json=loan_request_dict)
@@ -119,10 +122,10 @@ def submit_file():
             decision_data = response.json()
             decision = decision_data.get("decision", "Aucune décision reçue")
 
-            # Afficher la décision dans une boîte de dialogue
-            messagebox.showinfo("Décision de Prêt", f"La décision pour le prêt  est : {decision}")
+            # Afficher la décision dans une boîte de dialogue avec le nom du client
+            messagebox.showinfo("Décision de Prêt", f"La décision pour le prêt de {nom} est : {decision}")
 
-            # Copie du fichier dans le répertoire "data"
+            # Copier le fichier dans le répertoire "data"
             shutil.copy(file_path, data_directory)
             logging.info(f"Fichier {file_path} déposé avec succès.")
         except Exception as e:
