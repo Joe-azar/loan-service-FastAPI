@@ -6,7 +6,6 @@ from bson import ObjectId
 
 app = FastAPI()
 
-logging.basicConfig(filename="extraction_service.log", level=logging.INFO, format='%(asctime)s - %(message)s')
 
 class LoanRequest(BaseModel):
     nom: str

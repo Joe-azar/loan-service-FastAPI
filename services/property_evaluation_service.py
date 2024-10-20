@@ -5,7 +5,6 @@ import logging
 
 app = FastAPI()
 
-logging.basicConfig(filename="property_service.log", level=logging.INFO, format='%(asctime)s - %(message)s')
 
 class PropertyEvaluation(BaseModel):
     description_propriete: str

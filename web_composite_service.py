@@ -5,7 +5,6 @@ from bson import ObjectId
 
 app = FastAPI()
 
-logging.basicConfig(filename="composite_service.log", level=logging.INFO, format='%(asctime)s - %(message)s')
 
 # Fonction pour convertir les ObjectId de MongoDB en chaînes de caractères
 def convert_object_id(data):

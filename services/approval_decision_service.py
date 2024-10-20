@@ -6,7 +6,6 @@ import logging
 
 app = FastAPI()
 
-logging.basicConfig(filename="approval_service.log", level=logging.INFO, format='%(asctime)s - %(message)s')
 
 # Fonction pour convertir les ObjectId en chaînes de caractères
 def convert_object_id(data):

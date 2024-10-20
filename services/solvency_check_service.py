@@ -5,7 +5,6 @@ import logging
 
 app = FastAPI()
 
-logging.basicConfig(filename="solvency_service.log", level=logging.INFO, format='%(asctime)s - %(message)s')
 
 class SolvencyCheck(BaseModel):
     nom: str

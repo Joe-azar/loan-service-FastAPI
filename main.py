@@ -9,8 +9,6 @@ import sys
 import logging
 import requests  # Utilisé pour faire l'appel HTTP à l'API
 
-# Initialiser les logs
-logging.basicConfig(filename="service_logs.log", level=logging.INFO, format='%(asctime)s - %(message)s')
 
 # Liste des services à lancer
 services = [

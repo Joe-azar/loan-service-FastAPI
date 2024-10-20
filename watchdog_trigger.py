@@ -5,7 +5,6 @@ from watchdog.events import FileSystemEventHandler
 import httpx
 import logging
 
-logging.basicConfig(filename="watchdog.log", level=logging.INFO, format='%(asctime)s - %(message)s')
 
 async def send_loan_to_composite_service(loan_request):
     composite_service_url = "http://localhost:8000/evaluate_loan/"
