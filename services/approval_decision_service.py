@@ -36,11 +36,16 @@ async def make_decision(loan_data: LoanApprovalRequest):
         decision = "Loan Rejected - " + ("Risk too high" if not risk_factor else "Does not meet financial policies")
 
     try:
-        # Convertir l'objet Pydantic en dictionnaire pour ajouter l'ID
+        # Convertir l'objet Pydantic en dictionnaire pour l'insérer dans MongoDB
         loan_data_dict = loan_data.dict()
+        loan_data_dict["decision"] = decision  # Ajouter la décision au dictionnaire
+        
+        # Enregistrer dans la collection "loan_performance"
         result = await db["loan_performance"].insert_one(loan_data_dict)
         loan_data_dict["_id"] = result.inserted_id
         loan_data_dict = convert_object_id(loan_data_dict)  # Convertir les ObjectId en chaînes de caractères
+
+        logging.info(f"Loan performance recorded: {loan_data_dict}")
         return {"decision": decision, "loan_performance_id": loan_data_dict["_id"]}
     except Exception as e:
         logging.error(f"Error storing loan decision: {e}")
